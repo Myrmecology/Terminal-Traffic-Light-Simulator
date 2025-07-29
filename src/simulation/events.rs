@@ -138,7 +138,7 @@ impl EventManager {
     }
 
     /// Update event system and return triggered events
-    pub fn update(&mut self, delta_time: f32, vehicles: &[Vehicle], intersections: &mut [Intersection]) -> Vec<SimulationEvent> {
+    pub fn update(&mut self, _delta_time: f32, _vehicles: &[Vehicle], intersections: &mut [Intersection]) -> Vec<SimulationEvent> {
         let mut triggered_events = Vec::new();
 
         // Process scheduled events
@@ -148,7 +148,7 @@ impl EventManager {
         self.update_active_events();
 
         // Check for automatic event triggers
-        self.check_emergency_vehicle_triggers(vehicles, &mut triggered_events);
+        self.check_emergency_vehicle_triggers(&mut triggered_events);
         self.check_rush_hour_triggers(&mut triggered_events);
         self.check_random_event_triggers(&mut triggered_events);
 
@@ -160,10 +160,10 @@ impl EventManager {
 
     /// Process events scheduled for execution
     fn process_scheduled_events(&mut self, triggered_events: &mut Vec<SimulationEvent>) {
-        let now = Instant::now();
+        let _now = Instant::now();
         
         while let Some(scheduled) = self.event_queue.front() {
-            if scheduled.execute_at <= now {
+            if scheduled.execute_at <= _now {
                 let scheduled = self.event_queue.pop_front().unwrap();
                 triggered_events.push(scheduled.event.clone());
                 
@@ -171,7 +171,7 @@ impl EventManager {
                 let duration = self.get_event_duration(&scheduled.event);
                 let active_event = ActiveEvent {
                     event: scheduled.event,
-                    started_at: now,
+                    started_at: _now,
                     duration,
                     persistent: duration.is_none(),
                 };
@@ -184,8 +184,6 @@ impl EventManager {
 
     /// Update active events and remove expired ones
     fn update_active_events(&mut self) {
-        let now = Instant::now();
-        
         self.active_events.retain(|event| {
             if let Some(duration) = event.duration {
                 event.started_at.elapsed() < duration
@@ -196,7 +194,7 @@ impl EventManager {
     }
 
     /// Check for emergency vehicle triggers
-    fn check_emergency_vehicle_triggers(&mut self, vehicles: &[Vehicle], triggered_events: &mut Vec<SimulationEvent>) {
+    fn check_emergency_vehicle_triggers(&mut self, triggered_events: &mut Vec<SimulationEvent>) {
         if !self.emergency_enabled {
             return;
         }
@@ -327,7 +325,7 @@ impl EventManager {
         for (i, existing) in self.event_queue.iter().enumerate() {
             if scheduled_event.priority > existing.priority || 
                (scheduled_event.priority == existing.priority && scheduled_event.execute_at < existing.execute_at) {
-                self.event_queue.insert(i, scheduled_event);
+                self.event_queue.insert(i, scheduled_event.clone());
                 inserted = true;
                 break;
             }

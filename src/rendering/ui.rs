@@ -410,7 +410,7 @@ impl AlertSystem {
         let mut inserted = false;
         for (i, existing) in self.alert_queue.iter().enumerate() {
             if alert.level.priority() > existing.level.priority() {
-                self.alert_queue.insert(i, alert);
+                self.alert_queue.insert(i, alert.clone());
                 inserted = true;
                 break;
             }

@@ -20,7 +20,6 @@ use std::time::Duration;
 use crate::rendering::{ScreenBuffer, ScreenCell, Region};
 
 /// Terminal controller for managing screen output and input
-#[derive(Debug)]
 pub struct Terminal {
     stdout: Stdout,
     original_hook: Option<Box<dyn Fn(&std::panic::PanicInfo<'_>) + Sync + Send + 'static>>,

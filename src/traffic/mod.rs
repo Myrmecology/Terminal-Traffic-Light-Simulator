@@ -19,7 +19,7 @@ pub const DEFAULT_YELLOW_DURATION: Duration = Duration::from_secs(2);
 pub const DEFAULT_RED_DURATION: Duration = Duration::from_secs(10);
 
 /// Directions for traffic flow
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Direction {
     North,
     South,

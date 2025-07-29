@@ -5,7 +5,7 @@ use crate::traffic::{Direction, Priority};
 use rand::Rng;
 
 /// Types of vehicles in the simulation
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VehicleType {
     Car,
     Truck,
@@ -89,7 +89,7 @@ impl Position {
 }
 
 /// Vehicle state for behavior management
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VehicleState {
     Moving,
     Waiting,

@@ -2,10 +2,10 @@
 name = "terminal-traffic-light-simulator"
 version = "0.1.0"
 edition = "2021"
-authors = ["Justin D."]
+authors = ["Your Name <your.email@example.com>"]
 description = "A fast, secure terminal-based traffic light simulator built in Rust"
 license = "MIT"
-repository = "https://github.com/Myrmecology/Terminal-Traffic-Light-Simulator"
+repository = "https://github.com/yourusername/terminal-traffic-light-simulator"
 
 [dependencies]
 crossterm = "0.27"
@@ -15,6 +15,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rand = "0.8"
 colored = "2.0"
+ctrlc = "3.4"
 
 [profile.release]
 opt-level = 3
