@@ -1,0 +1,374 @@
+# Terminal Traffic Light Simulator - Vehicle Sprites
+# ASCII art sprites for different vehicle types and directions
+
+[VEHICLE_CAR]
+# Regular passenger cars
+NORTH=▲
+SOUTH=▼
+EAST=►
+WEST=◄
+NORTHEAST=↗
+NORTHWEST=↖
+SOUTHEAST=↘
+SOUTHWEST=↙
+
+[VEHICLE_CAR_DETAILED]
+# More detailed car sprites
+NORTH=🚗
+SOUTH=🚗
+EAST=🚗
+WEST=🚗
+
+[VEHICLE_TRUCK]
+# Trucks and larger vehicles
+NORTH=█
+SOUTH=█
+EAST=█
+WEST=█
+
+[VEHICLE_TRUCK_DETAILED]
+# Detailed truck sprites
+NORTH=🚛
+SOUTH=🚛
+EAST=🚛
+WEST=🚛
+
+[VEHICLE_EMERGENCY]
+# Emergency vehicles (ambulance, fire truck, police)
+NORTH=♦
+SOUTH=♦
+EAST=♦
+WEST=♦
+
+[VEHICLE_EMERGENCY_DETAILED]
+# Detailed emergency vehicle sprites
+NORTH=🚑
+SOUTH=🚑
+EAST=🚑
+WEST=🚑
+
+[VEHICLE_POLICE]
+# Police vehicles
+NORTH=◆
+SOUTH=◆
+EAST=◆
+WEST=◆
+
+[VEHICLE_POLICE_DETAILED]
+# Detailed police sprites
+NORTH=🚓
+SOUTH=🚓
+EAST=🚓
+WEST=🚓
+
+[VEHICLE_FIRE]
+# Fire trucks
+NORTH=■
+SOUTH=■
+EAST=■
+WEST=■
+
+[VEHICLE_FIRE_DETAILED]
+# Detailed fire truck sprites
+NORTH=🚒
+SOUTH=🚒
+EAST=🚒
+WEST=🚒
+
+[VEHICLE_BUS]
+# Public transportation buses
+NORTH=▬
+SOUTH=▬
+EAST=▬
+WEST=▬
+
+[VEHICLE_BUS_DETAILED]
+# Detailed bus sprites
+NORTH=🚌
+SOUTH=🚌
+EAST=🚌
+WEST=🚌
+
+[VEHICLE_MOTORCYCLE]
+# Motorcycles
+NORTH=•
+SOUTH=•
+EAST=•
+WEST=•
+
+[VEHICLE_MOTORCYCLE_DETAILED]
+# Detailed motorcycle sprites
+NORTH=🏍
+SOUTH=🏍
+EAST=🏍
+WEST=🏍
+
+[VEHICLE_BICYCLE]
+# Bicycles
+NORTH=°
+SOUTH=°
+EAST=°
+WEST=°
+
+[VEHICLE_BICYCLE_DETAILED]
+# Detailed bicycle sprites
+NORTH=🚲
+SOUTH=🚲
+EAST=🚲
+WEST=🚲
+
+[VEHICLE_TAXI]
+# Taxi vehicles
+NORTH=◉
+SOUTH=◉
+EAST=◉
+WEST=◉
+
+[VEHICLE_TAXI_DETAILED]
+# Detailed taxi sprites
+NORTH=🚖
+SOUTH=🚖
+EAST=🚖
+WEST=🚖
+
+# Alternative ASCII styles for different terminal capabilities
+
+[VEHICLE_SIMPLE]
+# Simple ASCII for low-end terminals
+CAR_NORTH=^
+CAR_SOUTH=v
+CAR_EAST=>
+CAR_WEST=
+TRUCK_NORTH=#
+TRUCK_SOUTH=#
+TRUCK_EAST=#
+TRUCK_WEST=#
+EMERGENCY_NORTH=*
+EMERGENCY_SOUTH=*
+EMERGENCY_EAST=*
+EMERGENCY_WEST=*
+
+[VEHICLE_RETRO]
+# Retro/vintage ASCII style
+CAR_NORTH=A
+CAR_SOUTH=V
+CAR_EAST=)
+CAR_WEST=(
+TRUCK_NORTH=T
+TRUCK_SOUTH=T
+TRUCK_EAST=T
+TRUCK_WEST=T
+EMERGENCY_NORTH=E
+EMERGENCY_SOUTH=E
+EMERGENCY_EAST=E
+EMERGENCY_WEST=E
+
+[VEHICLE_UNICODE]
+# Full Unicode support
+CAR_NORTH=🚗
+CAR_SOUTH=🚗
+CAR_EAST=🚗
+CAR_WEST=🚗
+TRUCK_NORTH=🚛
+TRUCK_SOUTH=🚛
+TRUCK_EAST=🚛
+TRUCK_WEST=🚛
+EMERGENCY_NORTH=🚑
+EMERGENCY_SOUTH=🚑
+EMERGENCY_EAST=🚑
+EMERGENCY_WEST=🚑
+POLICE_NORTH=🚓
+POLICE_SOUTH=🚓
+POLICE_EAST=🚓
+POLICE_WEST=🚓
+FIRE_NORTH=🚒
+FIRE_SOUTH=🚒
+FIRE_EAST=🚒
+FIRE_WEST=🚒
+BUS_NORTH=🚌
+BUS_SOUTH=🚌
+BUS_EAST=🚌
+BUS_WEST=🚌
+
+# Vehicle states and animations
+
+[VEHICLE_STATES]
+# Different states for vehicles
+MOVING=→
+WAITING=⏸
+STOPPED=⏹
+TURNING_LEFT=↺
+TURNING_RIGHT=↻
+EMERGENCY_LIGHTS=⚠
+HAZARD_LIGHTS=△
+BRAKE_LIGHTS=●
+
+[VEHICLE_ANIMATIONS]
+# Animation frames for moving vehicles
+FRAME_1=►
+FRAME_2=▶
+FRAME_3=►
+FRAME_4=▶
+
+# Color codes for vehicles (for terminals that support color)
+
+[VEHICLE_COLORS]
+# ANSI color codes for different vehicle types
+CAR=CYAN
+TRUCK=MAGENTA
+EMERGENCY=RED
+POLICE=BLUE
+FIRE=BRIGHT_RED
+BUS=YELLOW
+MOTORCYCLE=GREEN
+BICYCLE=WHITE
+TAXI=YELLOW
+
+# Special occasion vehicles
+
+[VEHICLE_SPECIAL]
+# Special event vehicles
+PARADE_FLOAT=🎠
+SNOW_PLOW=🚜
+CONSTRUCTION=🚧
+DELIVERY=📦
+MAIL=📮
+GARBAGE=🗑
+TOWING=🔧
+
+# Weather-affected sprites
+
+[VEHICLE_WEATHER]
+# Vehicle sprites affected by weather conditions
+RAIN_CAR=🚗💧
+SNOW_CAR=🚗❄
+FOG_CAR=🚗💨
+NIGHT_CAR=🚗🌙
+
+# Damaged/incident vehicles
+
+[VEHICLE_INCIDENT]
+# Vehicles involved in incidents
+BROKEN_DOWN=💥
+ACCIDENT=🔥
+FLAT_TIRE=⚡
+ENGINE_TROUBLE=💨
+
+# Size variations
+
+[VEHICLE_SIZES]
+# Different sizes for the same vehicle type
+SMALL_CAR=·
+MEDIUM_CAR=▲
+LARGE_CAR=█
+COMPACT_TRUCK=▪
+MEDIUM_TRUCK=■
+LARGE_TRUCK=██
+
+# Directional variants for better visual representation
+
+[VEHICLE_DIRECTIONAL]
+# More specific directional sprites
+CAR_NORTH_MOVING=⬆
+CAR_SOUTH_MOVING=⬇
+CAR_EAST_MOVING=➡
+CAR_WEST_MOVING=⬅
+CAR_NORTHEAST=↗
+CAR_NORTHWEST=↖
+CAR_SOUTHEAST=↘
+CAR_SOUTHWEST=↙
+
+# Terminal compatibility levels
+
+[COMPATIBILITY_BASIC]
+# For terminals with minimal Unicode support
+CAR=o
+TRUCK=O
+EMERGENCY=!
+BUS=B
+MOTORCYCLE=.
+
+[COMPATIBILITY_ENHANCED]
+# For terminals with good Unicode support
+CAR=●
+TRUCK=█
+EMERGENCY=◆
+BUS=▬
+MOTORCYCLE=•
+
+[COMPATIBILITY_FULL]
+# For terminals with full Unicode and emoji support
+CAR=🚗
+TRUCK=🚛
+EMERGENCY=🚑
+BUS=🚌
+MOTORCYCLE=🏍
+
+# Vehicle trails and effects
+
+[VEHICLE_EFFECTS]
+# Visual effects for vehicles
+SPEED_LINES=≈≈≈
+DUST_CLOUD=∙∙∙
+EXHAUST=~~~
+SMOKE=☁
+SPARKS=✦✧✦
+BRAKE_SPARKS=✨
+
+# Turn signals and indicators
+
+[VEHICLE_INDICATORS]
+# Turn signals and other indicators
+LEFT_TURN=◀
+RIGHT_TURN=▶
+HAZARD=▲▼
+REVERSE=◂
+BRAKE=●●●
+HEADLIGHTS=◉◉
+
+# Vehicle loading states
+
+[VEHICLE_CARGO]
+# Different cargo states
+EMPTY=□
+HALF_FULL=▣
+FULL=■
+OVERLOADED=▦
+
+# Emergency vehicle patterns
+
+[EMERGENCY_PATTERNS]
+# Flashing patterns for emergency vehicles
+PATTERN_1=⚠🚨⚠
+PATTERN_2=🔴🔵🔴
+PATTERN_3=⚡⚠⚡
+SIREN=♪♫♪
+
+# Legend and documentation
+# 
+# Basic Symbols:
+# ▲▼►◄ : Arrow-based vehicles (most compatible)
+# ●■▬  : Block-based vehicles (good compatibility)
+# 🚗🚛🚑 : Emoji vehicles (modern terminals only)
+# 
+# States:
+# → : Moving
+# ⏸ : Waiting at light
+# ⏹ : Stopped/parked
+# ⚠ : Emergency mode
+# 
+# Colors (when supported):
+# Red: Emergency vehicles
+# Blue: Police vehicles
+# Yellow: Taxis, buses
+# Cyan: Regular cars
+# Magenta: Trucks
+# Green: Motorcycles
+# White: Bicycles
+#
+# Usage Notes:
+# - Use VEHICLE_SIMPLE for maximum compatibility
+# - Use VEHICLE_UNICODE for modern terminals
+# - Vehicle direction should match movement direction
+# - Emergency vehicles should use bright/flashing colors
+# - Weather effects are optional enhancements
