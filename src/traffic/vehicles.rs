@@ -1,7 +1,7 @@
 //! Vehicle simulation and movement logic
 
 use std::time::Instant;
-use crate::traffic::{Direction, Priority};
+use crate::traffic::Direction;
 use rand::Rng;
 
 /// Types of vehicles in the simulation

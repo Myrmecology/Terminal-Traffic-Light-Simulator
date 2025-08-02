@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 use std::collections::VecDeque;
 use rand::Rng;
 
-use crate::traffic::{Vehicle, Intersection, Direction, Position, VehicleType};
+use crate::traffic::{Vehicle, Intersection, Direction, Position};
 use crate::simulation::WeatherType;
 
 /// Event manager for coordinating simulation events

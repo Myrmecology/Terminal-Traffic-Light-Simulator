@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::time::Instant;
-use crate::traffic::{Direction, Priority, TrafficLight, Vehicle, VehicleState, Position};
+use crate::traffic::{Direction, TrafficLight, Vehicle, VehicleState, Position};
 
 /// Intersection controller managing traffic lights and vehicle flow
 #[derive(Debug)]
@@ -26,18 +26,20 @@ impl Intersection {
 
         // Initialize lights for all directions
         for direction in [Direction::North, Direction::South, Direction::East, Direction::West] {
-            lights.insert(direction, TrafficLight::new(direction));
+            let mut light = TrafficLight::new(direction);
+            // Start with North-South green, East-West red
+            match direction {
+                Direction::North | Direction::South => {
+                    light.state = crate::traffic::lights::LightState::Green;
+                    light.last_change = Instant::now();
+                }
+                Direction::East | Direction::West => {
+                    light.state = crate::traffic::lights::LightState::Red;
+                    light.last_change = Instant::now();
+                }
+            }
+            lights.insert(direction, light);
             waiting_vehicles.insert(direction, Vec::new());
-        }
-
-        // Start with North-South green
-        if let Some(north_light) = lights.get_mut(&Direction::North) {
-            north_light.state = crate::traffic::lights::LightState::Green;
-            north_light.last_change = Instant::now();
-        }
-        if let Some(south_light) = lights.get_mut(&Direction::South) {
-            south_light.state = crate::traffic::lights::LightState::Green;
-            south_light.last_change = Instant::now();
         }
 
         Self {
@@ -107,8 +109,19 @@ impl Intersection {
             return; // Lights are overridden
         }
 
-        for light in self.lights.values_mut() {
-            light.update();
+        // Update each light's state
+        let mut lights_to_update = Vec::new();
+        for (direction, light) in &self.lights {
+            if light.should_change() {
+                lights_to_update.push(*direction);
+            }
+        }
+
+        // Apply updates
+        for direction in lights_to_update {
+            if let Some(light) = self.lights.get_mut(&direction) {
+                light.update();
+            }
         }
 
         // Ensure opposing directions have same state
@@ -118,21 +131,21 @@ impl Intersection {
     /// Synchronize opposing traffic lights
     fn synchronize_opposing_lights(&mut self) {
         // North-South synchronization
-        if let (Some(north), Some(south)) = (
-            self.lights.get(&Direction::North),
-            self.lights.get_mut(&Direction::South)
-        ) {
-            south.state = north.state;
-            south.last_change = north.last_change;
+        let north_state = self.lights.get(&Direction::North).map(|l| (l.state, l.last_change));
+        if let Some((state, last_change)) = north_state {
+            if let Some(south) = self.lights.get_mut(&Direction::South) {
+                south.state = state;
+                south.last_change = last_change;
+            }
         }
 
         // East-West synchronization
-        if let (Some(east), Some(west)) = (
-            self.lights.get(&Direction::East),
-            self.lights.get_mut(&Direction::West)
-        ) {
-            west.state = east.state;
-            west.last_change = east.last_change;
+        let east_state = self.lights.get(&Direction::East).map(|l| (l.state, l.last_change));
+        if let Some((state, last_change)) = east_state {
+            if let Some(west) = self.lights.get_mut(&Direction::West) {
+                west.state = state;
+                west.last_change = last_change;
+            }
         }
     }
 

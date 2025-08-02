@@ -10,14 +10,10 @@ mod simulation;
 mod config;
 
 use std::time::{Duration, Instant};
-use std::thread;
-
-use crossterm::event::{KeyCode, KeyModifiers};
-use crossterm::terminal;
 
 use crate::config::{Settings, ConfigError};
 use crate::rendering::{Terminal, InputHandler, InputEvent, ScreenBuffer, UserInterface, FrameRate};
-use crate::rendering::{CityRenderer, WeatherType as RenderWeatherType, TimeOfDay};
+use crate::rendering::{CityRenderer, WeatherType as RenderWeatherType};
 use crate::simulation::{SimulationEngine, SimulationError, WeatherType};
 use crate::traffic::Position;
 
@@ -85,7 +81,7 @@ impl TrafficSimulatorApp {
                 .collect(),
             spawn_positions: settings.config.traffic.spawn_positions
                 .iter()
-                .map(|sp| (Position::new(sp.x, sp.y), sp.direction.into()))
+                .map(|sp| (Position::new(sp.x, sp.y), sp.direction.clone().into()))
                 .collect(),
             enable_weather: settings.config.weather.enabled,
             enable_emergency_vehicles: settings.config.simulation.enable_emergency_vehicles,
@@ -165,7 +161,7 @@ impl TrafficSimulatorApp {
                 InputEvent::Char('h') | InputEvent::Char('H') => {
                     self.show_help();
                 }
-                InputEvent::Char(' ') => {
+                InputEvent::Char(' ') | InputEvent::Char('p') | InputEvent::Char('P') => {
                     self.toggle_pause();
                 }
                 InputEvent::Char('e') | InputEvent::Char('E') => {
@@ -183,10 +179,10 @@ impl TrafficSimulatorApp {
                 InputEvent::Char('c') | InputEvent::Char('C') => {
                     self.set_clear_weather();
                 }
-                InputEvent::Char('+') => {
+                InputEvent::Char('+') | InputEvent::Char('=') => {
                     self.increase_traffic();
                 }
-                InputEvent::Char('-') => {
+                InputEvent::Char('-') | InputEvent::Char('_') => {
                     self.decrease_traffic();
                 }
                 InputEvent::Char('1') => {
@@ -228,7 +224,7 @@ impl TrafficSimulatorApp {
 
         // Update weather display
         let current_weather = self.simulation_engine.get_current_weather();
-        self.user_interface.set_weather(weather_type_to_string(current_weather));
+        self.user_interface.set_weather(&weather_type_to_string(current_weather));
 
         // Update emergency status
         let has_emergency = self.simulation_engine.has_emergency_vehicles();
@@ -321,8 +317,8 @@ impl TrafficSimulatorApp {
         let sim_area = self.user_interface.get_simulation_area();
         
         // Horizontal roads
-        for y in [15, 25] {
-            let screen_y = sim_area.y + y.saturating_sub(sim_area.y);
+        for y in [15u16, 25] {
+            let screen_y = sim_area.y + (y as usize).saturating_sub(sim_area.y);
             if screen_y < sim_area.y + sim_area.height {
                 self.city_renderer.render_road(
                     &mut self.screen_buffer,
@@ -335,8 +331,8 @@ impl TrafficSimulatorApp {
         }
 
         // Vertical roads
-        for x in [20, 60] {
-            let screen_x = sim_area.x + x.saturating_sub(sim_area.x);
+        for x in [20u16, 60] {
+            let screen_x = sim_area.x + (x as usize).saturating_sub(sim_area.x);
             if screen_x < sim_area.x + sim_area.width {
                 self.city_renderer.render_road(
                     &mut self.screen_buffer,

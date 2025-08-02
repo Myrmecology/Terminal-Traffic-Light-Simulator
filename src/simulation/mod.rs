@@ -191,10 +191,14 @@ impl SimulationEngine {
             }
 
             if let Some(spawner) = self.spawners.get_mut(i) {
+                // Update the spawner with delta time
+                spawner.update(delta_time);
+                
                 if let Some(vehicle) = spawner.try_spawn(spawn_point.position, spawn_point.direction) {
                     // Check if spawn position is clear
                     let position_clear = !self.vehicles.iter().any(|v| 
-                        v.position.distance_to(&spawn_point.position) < 2.0
+                        v.position.distance_to(&spawn_point.position) < 3.0 && 
+                        v.state != crate::traffic::VehicleState::Exited
                     );
 
                     if position_clear {
@@ -210,17 +214,25 @@ impl SimulationEngine {
 
     /// Update all vehicles
     fn update_vehicles(&mut self, delta_time: f32) -> Result<(), SimulationError> {
-        // Clone vehicles for collision checking
-        let vehicles_clone = self.vehicles.clone();
-
-        for vehicle in &mut self.vehicles {
+        // Collect indices of vehicles that are out of bounds
+        let mut out_of_bounds_indices = Vec::new();
+        
+        for (index, vehicle) in self.vehicles.iter_mut().enumerate() {
             vehicle.update(delta_time);
 
             // Check for out of bounds
-            if self.is_vehicle_out_of_bounds(vehicle) {
-                vehicle.set_state(crate::traffic::VehicleState::Exited);
-                self.statistics.total_vehicles_processed += 1;
+            let is_out_of_bounds = vehicle.position.x < -10 || vehicle.position.x > 100 ||
+                                  vehicle.position.y < -10 || vehicle.position.y > 50;
+            
+            if is_out_of_bounds {
+                out_of_bounds_indices.push(index);
             }
+        }
+
+        // Mark out of bounds vehicles as exited
+        for index in out_of_bounds_indices {
+            self.vehicles[index].set_state(crate::traffic::VehicleState::Exited);
+            self.statistics.total_vehicles_processed += 1;
         }
 
         Ok(())
@@ -288,7 +300,7 @@ impl SimulationEngine {
             SimulationEvent::WeatherChanged { new_weather } => {
                 self.weather_system.set_current_weather(new_weather);
             }
-            SimulationEvent::TrafficIncident { intersection_id, duration } => {
+            SimulationEvent::TrafficIncident { intersection_id, duration: _ } => {
                 if let Some(intersection) = self.intersections.iter_mut()
                     .find(|i| i.id == intersection_id) {
                     // Temporarily reduce efficiency
@@ -303,6 +315,31 @@ impl SimulationEngine {
             SimulationEvent::RushHourEnded => {
                 for spawner in &mut self.spawners {
                     spawner.set_spawn_rate(spawner.spawn_rate() * 0.5);
+                }
+            }
+            SimulationEvent::TrafficLightMalfunction { intersection_id, duration: _ } => {
+                if let Some(intersection) = self.intersections.iter_mut()
+                    .find(|i| i.id == intersection_id) {
+                    // Force all lights to red during malfunction
+                    for light in intersection.lights.values_mut() {
+                        light.state = crate::traffic::lights::LightState::Red;
+                    }
+                }
+            }
+            SimulationEvent::RoadConstruction { start_position: _, end_position: _, duration: _ } => {
+                // Road construction could reduce speed in area
+                // For now, just acknowledge the event
+            }
+            SimulationEvent::SpecialEvent { center_position: _, radius: _, duration: _, traffic_impact } => {
+                // Special events increase traffic in the area
+                for spawner in &mut self.spawners {
+                    spawner.set_spawn_rate(spawner.spawn_rate() * traffic_impact);
+                }
+            }
+            SimulationEvent::MaintenanceMode { duration: _ } => {
+                // During maintenance mode, reduce efficiency of all intersections
+                for intersection in &mut self.intersections {
+                    intersection.efficiency_score *= 0.7;
                 }
             }
         }

@@ -1,7 +1,7 @@
 //! Traffic light state management and timing logic
 
 use std::time::{Duration, Instant};
-use crate::traffic::{Direction, Priority, DEFAULT_GREEN_DURATION, DEFAULT_YELLOW_DURATION, DEFAULT_RED_DURATION};
+use crate::traffic::{Direction, DEFAULT_GREEN_DURATION, DEFAULT_YELLOW_DURATION, DEFAULT_RED_DURATION};
 
 /// Traffic light states
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,6 +73,20 @@ impl TrafficLight {
         }
     }
 
+    /// Check if the light should change state
+    pub fn should_change(&self) -> bool {
+        if self.emergency_override {
+            return false;
+        }
+        
+        let elapsed = self.last_change.elapsed();
+        match self.state {
+            LightState::Green => elapsed >= self.green_duration,
+            LightState::Yellow => elapsed >= self.yellow_duration,
+            LightState::Red => elapsed >= self.red_duration,
+        }
+    }
+
     /// Advance to the next light state
     fn advance_state(&mut self) {
         self.state = match self.state {
@@ -138,5 +152,29 @@ mod tests {
         assert_eq!(light.direction, Direction::North);
         assert_eq!(light.state, LightState::Red);
         assert!(!light.emergency_override);
+    }
+
+    #[test]
+    fn test_should_change() {
+        let mut light = TrafficLight::new(Direction::North);
+        light.state = LightState::Green;
+        light.last_change = Instant::now() - Duration::from_secs(10);
+        
+        // Should change since 10 seconds > DEFAULT_GREEN_DURATION (8 seconds)
+        assert!(light.should_change());
+        
+        // Reset timer
+        light.last_change = Instant::now();
+        assert!(!light.should_change());
+    }
+
+    #[test]
+    fn test_emergency_override() {
+        let mut light = TrafficLight::new(Direction::North);
+        light.state = LightState::Green;
+        
+        light.set_emergency_override(true);
+        assert_eq!(light.state, LightState::Red);
+        assert!(!light.should_change()); // Should not change during emergency
     }
 }

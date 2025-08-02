@@ -12,17 +12,16 @@ use crossterm::{
         disable_raw_mode, enable_raw_mode, size, Clear, ClearType, EnterAlternateScreen,
         LeaveAlternateScreen,
     },
-    Result as CrosstermResult,
 };
-use std::io::{self, Write, Stdout};
+use std::io::{self, Write, Stdout, Result as IoResult};
 use std::time::Duration;
 
-use crate::rendering::{ScreenBuffer, ScreenCell, Region};
+use crate::rendering::{ScreenBuffer, Region};
 
 /// Terminal controller for managing screen output and input
 pub struct Terminal {
     stdout: Stdout,
-    original_hook: Option<Box<dyn Fn(&std::panic::PanicInfo<'_>) + Sync + Send + 'static>>,
+    original_hook: Option<Box<dyn Fn(&std::panic::PanicHookInfo<'_>) + Sync + Send + 'static>>,
     raw_mode_enabled: bool,
     alternate_screen: bool,
     cursor_hidden: bool,
@@ -32,7 +31,7 @@ pub struct Terminal {
 
 impl Terminal {
     /// Initialize terminal with raw mode and alternate screen
-    pub fn new() -> CrosstermResult<Self> {
+    pub fn new() -> IoResult<Self> {
         let stdout = io::stdout();
         let (width, height) = size()?;
 
@@ -51,7 +50,7 @@ impl Terminal {
     }
 
     /// Setup terminal for application use
-    fn setup(&mut self) -> CrosstermResult<()> {
+    fn setup(&mut self) -> IoResult<()> {
         // Setup panic hook for clean restoration
         self.setup_panic_hook();
 
@@ -91,7 +90,7 @@ impl Terminal {
     }
 
     /// Restore terminal to original state
-    pub fn restore(&mut self) -> CrosstermResult<()> {
+    pub fn restore(&mut self) -> IoResult<()> {
         if self.cursor_hidden {
             execute!(self.stdout, Show)?;
             self.cursor_hidden = false;
@@ -117,7 +116,7 @@ impl Terminal {
     }
 
     /// Get terminal size
-    pub fn size(&mut self) -> CrosstermResult<(u16, u16)> {
+    pub fn size(&mut self) -> IoResult<(u16, u16)> {
         let (width, height) = size()?;
         self.width = width;
         self.height = height;
@@ -125,19 +124,19 @@ impl Terminal {
     }
 
     /// Clear the entire screen
-    pub fn clear(&mut self) -> CrosstermResult<()> {
+    pub fn clear(&mut self) -> IoResult<()> {
         execute!(self.stdout, Clear(ClearType::All))?;
         Ok(())
     }
 
     /// Move cursor to position
-    pub fn move_cursor(&mut self, x: u16, y: u16) -> CrosstermResult<()> {
+    pub fn move_cursor(&mut self, x: u16, y: u16) -> IoResult<()> {
         execute!(self.stdout, MoveTo(x, y))?;
         Ok(())
     }
 
     /// Hide cursor
-    pub fn hide_cursor(&mut self) -> CrosstermResult<()> {
+    pub fn hide_cursor(&mut self) -> IoResult<()> {
         if !self.cursor_hidden {
             execute!(self.stdout, Hide)?;
             self.cursor_hidden = true;
@@ -146,7 +145,7 @@ impl Terminal {
     }
 
     /// Show cursor
-    pub fn show_cursor(&mut self) -> CrosstermResult<()> {
+    pub fn show_cursor(&mut self) -> IoResult<()> {
         if self.cursor_hidden {
             execute!(self.stdout, Show)?;
             self.cursor_hidden = false;
@@ -155,7 +154,7 @@ impl Terminal {
     }
 
     /// Render screen buffer efficiently using dirty regions
-    pub fn render_buffer(&mut self, buffer: &mut ScreenBuffer) -> CrosstermResult<()> {
+    pub fn render_buffer(&mut self, buffer: &mut ScreenBuffer) -> IoResult<()> {
         let dirty_regions = buffer.take_dirty_regions();
         
         if dirty_regions.is_empty() {
@@ -171,7 +170,7 @@ impl Terminal {
     }
 
     /// Render a specific region of the screen buffer
-    fn render_region(&mut self, buffer: &ScreenBuffer, region: &Region) -> CrosstermResult<()> {
+    fn render_region(&mut self, buffer: &ScreenBuffer, region: &Region) -> IoResult<()> {
         for y in region.y..region.y + region.height {
             if y >= buffer.height {
                 break;
@@ -209,7 +208,7 @@ impl Terminal {
     }
 
     /// Render entire screen buffer (fallback for full refresh)
-    pub fn render_full_buffer(&mut self, buffer: &ScreenBuffer) -> CrosstermResult<()> {
+    pub fn render_full_buffer(&mut self, buffer: &ScreenBuffer) -> IoResult<()> {
         execute!(self.stdout, Clear(ClearType::All))?;
 
         for y in 0..buffer.height {
@@ -242,7 +241,7 @@ impl Terminal {
     }
 
     /// Draw text at specific position with color
-    pub fn draw_text(&mut self, x: u16, y: u16, text: &str, fg: Color, bg: Color) -> CrosstermResult<()> {
+    pub fn draw_text(&mut self, x: u16, y: u16, text: &str, fg: Color, bg: Color) -> IoResult<()> {
         queue!(
             self.stdout,
             MoveTo(x, y),
@@ -255,7 +254,7 @@ impl Terminal {
     }
 
     /// Draw text with only foreground color
-    pub fn draw_text_fg(&mut self, x: u16, y: u16, text: &str, color: Color) -> CrosstermResult<()> {
+    pub fn draw_text_fg(&mut self, x: u16, y: u16, text: &str, color: Color) -> IoResult<()> {
         queue!(
             self.stdout,
             MoveTo(x, y),
@@ -267,13 +266,13 @@ impl Terminal {
     }
 
     /// Flush output buffer
-    pub fn flush(&mut self) -> CrosstermResult<()> {
-        self.stdout.flush().map_err(|e| crossterm::ErrorKind::IoError(e))?;
+    pub fn flush(&mut self) -> IoResult<()> {
+        self.stdout.flush()?;
         Ok(())
     }
 
     /// Check if resize event occurred
-    pub fn check_resize(&mut self) -> CrosstermResult<Option<(u16, u16)>> {
+    pub fn check_resize(&mut self) -> IoResult<Option<(u16, u16)>> {
         let (width, height) = size()?;
         if width != self.width || height != self.height {
             self.width = width;
@@ -282,6 +281,19 @@ impl Terminal {
         } else {
             Ok(None)
         }
+    }
+}
+
+// Add Debug implementation for Terminal
+impl std::fmt::Debug for Terminal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Terminal")
+            .field("raw_mode_enabled", &self.raw_mode_enabled)
+            .field("alternate_screen", &self.alternate_screen)
+            .field("cursor_hidden", &self.cursor_hidden)
+            .field("width", &self.width)
+            .field("height", &self.height)
+            .finish()
     }
 }
 
@@ -304,7 +316,7 @@ impl InputHandler {
     }
 
     /// Poll for input events (non-blocking)
-    pub fn poll_input(&mut self, timeout: Duration) -> CrosstermResult<Option<InputEvent>> {
+    pub fn poll_input(&mut self, timeout: Duration) -> IoResult<Option<InputEvent>> {
         if event::poll(timeout)? {
             match event::read()? {
                 Event::Key(key_event) => {
@@ -395,7 +407,7 @@ pub struct TerminalCapabilities {
 
 impl TerminalCapabilities {
     /// Detect terminal capabilities
-    pub fn detect() -> CrosstermResult<Self> {
+    pub fn detect() -> IoResult<Self> {
         let (width, height) = size()?;
         
         Ok(Self {
