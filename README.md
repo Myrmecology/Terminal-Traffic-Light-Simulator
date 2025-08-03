@@ -4,6 +4,9 @@ A fast, clean, and fun **traffic light simulation** built in **100% pure Rust**.
 
 > Designed to be both a fun programming exercise and a tool for expansion 
 
+For a video DEMO of this project, please visit: https://www.youtube.com/watch?v=vZ3dlrcW4GE 
+
+
 ---
 
 ## 🎯 Features 🦀
