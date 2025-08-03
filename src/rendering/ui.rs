@@ -7,7 +7,7 @@ use crossterm::style::Color;
 use std::time::{Duration, Instant};
 
 use crate::rendering::{ScreenBuffer, ScreenCell, ColorScheme, SCREEN_WIDTH, SCREEN_HEIGHT};
-use crate::traffic::{Direction, VehicleType};
+use crate::traffic::VehicleType;
 use crate::simulation::statistics::SimulationStats;
 
 /// Main UI layout manager

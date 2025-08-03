@@ -222,6 +222,7 @@ pub struct CityRenderer {
     pub weather: WeatherType,
     pub weather_frame: usize,
     pub time_of_day: TimeOfDay,
+    pub weather_persistent: bool,
 }
 
 /// Time of day for different visual themes
@@ -241,6 +242,7 @@ impl CityRenderer {
             weather: WeatherType::Clear,
             weather_frame: 0,
             time_of_day: TimeOfDay::Day,
+            weather_persistent: false,
         }
     }
 
@@ -349,20 +351,26 @@ impl CityRenderer {
         }
 
         let density = match self.weather {
-            WeatherType::Rain => 15,
-            WeatherType::Snow => 10,
-            WeatherType::Fog => 25,
+            WeatherType::Rain => 20,
+            WeatherType::Snow => 15,
+            WeatherType::Fog => 40,
             WeatherType::Clear => 0,
         };
 
+        // Only render within the simulation area bounds
+        let sim_width = buffer.width.saturating_sub(30);
+        let sim_height = buffer.height.saturating_sub(2);
+
         for i in 0..density {
-            let x = (i * 7) % buffer.width;
-            let y = (i * 11 + self.weather_frame) % buffer.height;
+            let x = (i * 7 + self.weather_frame * 2) % sim_width;
+            let y = (i * 11 + self.weather_frame) % sim_height;
             
-            if let Some(sprite) = self.ascii_art.get_weather_sprite(self.weather, i) {
+            if let Some(sprite) = self.ascii_art.get_weather_sprite(self.weather, i + self.weather_frame) {
                 if let Some(ch) = sprite.chars().next() {
                     let color = self.get_weather_color();
-                    buffer.set_char(x, y, ScreenCell::with_colors(ch, color, Color::Black));
+                    if x > 0 && y > 0 && x < sim_width && y < sim_height {
+                        buffer.set_char(x, y, ScreenCell::with_colors(ch, color, Color::Black));
+                    }
                 }
             }
         }
@@ -380,13 +388,19 @@ impl CityRenderer {
 
     /// Update weather animation frame
     pub fn update_weather_frame(&mut self) {
-        self.weather_frame = (self.weather_frame + 1) % 100;
+        if self.weather != WeatherType::Clear {
+            self.weather_frame = (self.weather_frame + 1) % 100;
+            self.weather_persistent = true;
+        }
     }
 
     /// Set weather type
     pub fn set_weather(&mut self, weather: WeatherType) {
-        self.weather = weather;
-        self.weather_frame = 0;
+        if self.weather != weather {
+            self.weather = weather;
+            self.weather_frame = 0;
+            self.weather_persistent = weather != WeatherType::Clear;
+        }
     }
 
     /// Set time of day
@@ -410,32 +424,7 @@ impl CityRenderer {
             }
         }
 
-        // Add some city elements
-        self.render_city_buildings(buffer);
-    }
-
-    /// Render decorative city buildings
-    fn render_city_buildings(&self, buffer: &mut ScreenBuffer) {
-        let buildings = [
-            ("█████", 5, buffer.height - 8),
-            ("███", 15, buffer.height - 6),
-            ("███████", 25, buffer.height - 10),
-            ("████", 40, buffer.height - 7),
-        ];
-
-        for (building, x, y) in buildings.iter() {
-            for (dx, ch) in building.chars().enumerate() {
-                for dy in 0..5 {
-                    if x + dx < buffer.width && y + dy < buffer.height {
-                        let color = match self.time_of_day {
-                            TimeOfDay::Night => Color::DarkGrey,
-                            _ => Color::Grey,
-                        };
-                        buffer.set_char(x + dx, y + dy, ScreenCell::with_colors(ch, color, Color::Black));
-                    }
-                }
-            }
-        }
+        // Don't render the city buildings - they were causing the white blocks
     }
 
     /// Render vehicle sprite

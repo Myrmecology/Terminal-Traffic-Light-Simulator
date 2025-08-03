@@ -230,9 +230,8 @@ impl TrafficSimulatorApp {
         let has_emergency = self.simulation_engine.has_emergency_vehicles();
         self.user_interface.set_emergency_active(has_emergency);
 
-        // Update city renderer weather
+        // Update city renderer weather - only when weather actually changes
         self.city_renderer.set_weather(convert_weather_type(current_weather));
-        self.city_renderer.update_weather_frame();
 
         Ok(())
     }
@@ -242,18 +241,23 @@ impl TrafficSimulatorApp {
         // Clear screen buffer
         self.screen_buffer.clear();
 
+        // Get simulation area from UI first to ensure we don't render outside bounds
+        let sim_area = self.user_interface.get_simulation_area();
+
         // Render city background
         self.city_renderer.render_city_background(&mut self.screen_buffer);
 
-        // Get simulation area from UI
-        let sim_area = self.user_interface.get_simulation_area();
+        // Render roads connecting intersections
+        self.render_roads();
 
         // Render intersections
         for intersection in &self.simulation_engine.intersections {
-            let screen_x = sim_area.x + (intersection.position.x as usize).saturating_sub(sim_area.x);
-            let screen_y = sim_area.y + (intersection.position.y as usize).saturating_sub(sim_area.y);
+            let screen_x = sim_area.x + intersection.position.x as usize;
+            let screen_y = sim_area.y + intersection.position.y as usize;
 
-            if screen_x < sim_area.x + sim_area.width && screen_y < sim_area.y + sim_area.height {
+            // Check bounds more carefully
+            if screen_x >= sim_area.x && screen_x < sim_area.x + sim_area.width - 5 &&
+               screen_y >= sim_area.y && screen_y < sim_area.y + sim_area.height - 5 {
                 let ns_light = intersection.get_light_state(crate::traffic::Direction::North)
                     .unwrap_or(crate::traffic::lights::LightState::Red);
                 let ew_light = intersection.get_light_state(crate::traffic::Direction::East)
@@ -271,10 +275,12 @@ impl TrafficSimulatorApp {
 
         // Render vehicles
         for vehicle in &self.simulation_engine.vehicles {
-            let screen_x = sim_area.x + (vehicle.position.x as usize).saturating_sub(sim_area.x);
-            let screen_y = sim_area.y + (vehicle.position.y as usize).saturating_sub(sim_area.y);
+            let screen_x = sim_area.x + vehicle.position.x as usize;
+            let screen_y = sim_area.y + vehicle.position.y as usize;
 
-            if screen_x < sim_area.x + sim_area.width && screen_y < sim_area.y + sim_area.height {
+            // Check bounds
+            if screen_x >= sim_area.x && screen_x < sim_area.x + sim_area.width &&
+               screen_y >= sim_area.y && screen_y < sim_area.y + sim_area.height {
                 self.city_renderer.render_vehicle(
                     &mut self.screen_buffer,
                     screen_x,
@@ -285,20 +291,20 @@ impl TrafficSimulatorApp {
             }
         }
 
-        // Render roads connecting intersections
-        self.render_roads();
-
         // Render weather effects
         self.city_renderer.render_weather(&mut self.screen_buffer);
+        
+        // Update weather animation frame
+        self.city_renderer.update_weather_frame();
 
-        // Render UI
+        // Render UI (panels, status, etc.)
         self.user_interface.render(&mut self.screen_buffer);
 
         // Update FPS display
         if self.settings.config.debug.show_fps {
             let fps_text = format!("FPS: {:.1}", self.frame_rate.current_fps());
             self.screen_buffer.draw_text(
-                self.screen_buffer.width - 15,
+                self.screen_buffer.width.saturating_sub(15),
                 0,
                 &fps_text,
                 crossterm::style::Color::Yellow,
@@ -316,31 +322,62 @@ impl TrafficSimulatorApp {
     fn render_roads(&mut self) {
         let sim_area = self.user_interface.get_simulation_area();
         
-        // Horizontal roads
-        for y in [15u16, 25] {
-            let screen_y = sim_area.y + (y as usize).saturating_sub(sim_area.y);
-            if screen_y < sim_area.y + sim_area.height {
-                self.city_renderer.render_road(
-                    &mut self.screen_buffer,
-                    sim_area.x + 8,
-                    screen_y,
-                    crate::traffic::Direction::East,
-                    40,
-                );
+        // Get intersection positions from simulation engine
+        if self.simulation_engine.intersections.len() >= 4 {
+            // Render horizontal roads between intersections
+            for i in 0..2 {
+                let y = self.simulation_engine.intersections[i * 2].position.y as usize;
+                let start_x = self.simulation_engine.intersections[i * 2].position.x as usize + 5;
+                let end_x = self.simulation_engine.intersections[i * 2 + 1].position.x as usize;
+                
+                let screen_y = sim_area.y + y;
+                let screen_start_x = sim_area.x + start_x;
+                
+                // Ensure we're within bounds
+                if screen_y >= sim_area.y && screen_y < sim_area.y + sim_area.height &&
+                   screen_start_x < sim_area.x + sim_area.width {
+                    let length = end_x.saturating_sub(start_x);
+                    let max_length = (sim_area.x + sim_area.width).saturating_sub(screen_start_x);
+                    let clamped_length = length.min(max_length);
+                    
+                    if clamped_length > 0 {
+                        self.city_renderer.render_road(
+                            &mut self.screen_buffer,
+                            screen_start_x,
+                            screen_y,
+                            crate::traffic::Direction::East,
+                            clamped_length,
+                        );
+                    }
+                }
             }
-        }
 
-        // Vertical roads
-        for x in [20u16, 60] {
-            let screen_x = sim_area.x + (x as usize).saturating_sub(sim_area.x);
-            if screen_x < sim_area.x + sim_area.width {
-                self.city_renderer.render_road(
-                    &mut self.screen_buffer,
-                    screen_x,
-                    sim_area.y + 8,
-                    crate::traffic::Direction::North,
-                    20,
-                );
+            // Render vertical roads between intersections
+            for i in 0..2 {
+                let x = self.simulation_engine.intersections[i].position.x as usize;
+                let start_y = self.simulation_engine.intersections[i].position.y as usize + 5;
+                let end_y = self.simulation_engine.intersections[i + 2].position.y as usize;
+                
+                let screen_x = sim_area.x + x;
+                let screen_start_y = sim_area.y + start_y;
+                
+                // Ensure we're within bounds
+                if screen_x >= sim_area.x && screen_x < sim_area.x + sim_area.width &&
+                   screen_start_y < sim_area.y + sim_area.height {
+                    let length = end_y.saturating_sub(start_y);
+                    let max_length = (sim_area.y + sim_area.height).saturating_sub(screen_start_y);
+                    let clamped_length = length.min(max_length);
+                    
+                    if clamped_length > 0 {
+                        self.city_renderer.render_road(
+                            &mut self.screen_buffer,
+                            screen_x,
+                            screen_start_y,
+                            crate::traffic::Direction::North,
+                            clamped_length,
+                        );
+                    }
+                }
             }
         }
     }
@@ -438,7 +475,7 @@ impl TrafficSimulatorApp {
         self.user_interface.add_alert(
             format!("Weather changed to: {}", weather_type_to_string(new_weather)),
             crate::rendering::AlertLevel::Info,
-            Duration::from_secs(2),
+            Duration::from_secs(3),
         );
     }
 
@@ -455,7 +492,7 @@ impl TrafficSimulatorApp {
         self.user_interface.add_alert(
             format!("Weather changed to: {}", weather_type_to_string(new_weather)),
             crate::rendering::AlertLevel::Info,
-            Duration::from_secs(2),
+            Duration::from_secs(3),
         );
     }
 
@@ -472,7 +509,7 @@ impl TrafficSimulatorApp {
         self.user_interface.add_alert(
             format!("Weather changed to: {}", weather_type_to_string(new_weather)),
             crate::rendering::AlertLevel::Info,
-            Duration::from_secs(2),
+            Duration::from_secs(3),
         );
     }
 

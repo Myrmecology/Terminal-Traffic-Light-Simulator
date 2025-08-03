@@ -4,6 +4,13 @@ use std::time::Instant;
 use crate::traffic::Direction;
 use rand::Rng;
 
+/// Priority levels for vehicles
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Priority {
+    Normal,
+    Emergency,
+}
+
 /// Types of vehicles in the simulation
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VehicleType {
