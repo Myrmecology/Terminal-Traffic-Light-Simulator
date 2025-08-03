@@ -120,3 +120,8 @@ site/
 /recordings/
 /screenshots/
 /test_output/
+
+
+# Added by cargo
+
+/target
